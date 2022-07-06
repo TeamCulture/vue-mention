@@ -11,6 +11,7 @@ import Limit from './views/Limit.vue'
 import ItemSlot from './views/ItemSlot.vue'
 import WrappedInput from './views/WrappedInput.vue'
 import ContentEditable from './views/ContentEditable.vue'
+import AllowSpace from './views/AllowSpace.vue'
 
 Vue.use(VueRouter)
 
@@ -58,6 +59,10 @@ const routes = [
   {
     path: '/content-editable',
     component: ContentEditable,
+  },
+  {
+    path: '/allow-space',
+    component: AllowSpace,
   },
 ]
 

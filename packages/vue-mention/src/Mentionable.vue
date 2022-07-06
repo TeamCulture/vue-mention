@@ -1,9 +1,11 @@
 <script>
-import getCaretPosition from 'textarea-caret'
-import { VPopover } from 'v-tooltip'
+import getCaretPosition from "textarea-caret";
+import { VPopover } from "v-tooltip";
 
-const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : ''
-const isIe = userAgent.indexOf('MSIE ') !== -1 || userAgent.indexOf('Trident/') !== -1
+const userAgent =
+  typeof window !== "undefined" ? window.navigator.userAgent : "";
+const isIe =
+  userAgent.indexOf("MSIE ") !== -1 || userAgent.indexOf("Trident/") !== -1;
 
 export default {
   components: {
@@ -20,7 +22,7 @@ export default {
 
     placement: {
       type: String,
-      default: 'top-start',
+      default: "top-start",
     },
 
     items: {
@@ -34,6 +36,11 @@ export default {
     },
 
     filteringDisabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    allowSpace: {
       type: Boolean,
       default: false,
     },
@@ -54,301 +61,357 @@ export default {
     },
   },
 
-  data () {
+  data() {
     return {
       key: null,
       oldKey: null,
       searchText: null,
       caretPosition: null,
       selectedIndex: 0,
-    }
+      isMentioning: false,
+    };
   },
 
   computed: {
-    filteredItems () {
+    filteredItems() {
       if (!this.searchText || this.filteringDisabled) {
-        return this.items
+        return this.items;
       }
 
-      const searchText = this.searchText.toLowerCase()
+      const searchText = this.searchText.toLowerCase();
 
-      return this.items.filter(item => {
+      return this.items.filter((item) => {
         /** @type {string} */
-        let text
+        let text;
         if (item.searchText) {
-          text = item.searchText
+          text = item.searchText;
         } else if (item.label) {
-          text = item.label
+          text = item.label;
         } else {
-          text = ''
+          text = "";
           for (const key in item) {
-            text += item[key]
+            text += item[key];
           }
         }
-        return text.toLowerCase().includes(searchText)
-      })
+        return text.toLowerCase().includes(searchText);
+      });
     },
 
-    displayedItems () {
-      return this.filteredItems.slice(0, this.limit)
+    displayedItems() {
+      return this.filteredItems.slice(0, this.limit);
     },
   },
 
   watch: {
-    displayedItems () {
-      this.selectedIndex = 0
+    displayedItems() {
+      this.selectedIndex = 0;
     },
 
-    searchText (value, oldValue) {
+    searchText(value, oldValue) {
       if (value) {
-        this.$emit('search', value, oldValue)
+        this.$emit("search", value, oldValue);
       }
     },
   },
 
-  mounted () {
-    this.input = this.getInput()
-    this.attach()
+  mounted() {
+    this.input = this.getInput();
+    this.attach();
   },
 
-  updated () {
-    const input = this.getInput()
+  updated() {
+    const input = this.getInput();
     if (input !== this.input) {
-      this.detach()
-      this.input = input
-      this.attach()
+      this.detach();
+      this.input = input;
+      this.attach();
     }
   },
 
-  beforeDestroy () {
-    this.detach()
+  beforeDestroy() {
+    this.detach();
   },
 
   methods: {
-    getInput () {
-      const [vnode] = this.$scopedSlots.default()
+    getInput() {
+      const [vnode] = this.$scopedSlots.default();
       if (vnode) {
-        if (vnode.elm.tagName === 'INPUT' || vnode.elm.tagName === 'TEXTAREA' || vnode.elm.isContentEditable) {
-          return vnode.elm
+        if (
+          vnode.elm.tagName === "INPUT" ||
+          vnode.elm.tagName === "TEXTAREA" ||
+          vnode.elm.isContentEditable
+        ) {
+          return vnode.elm;
         } else {
-          return vnode.elm.querySelector('input') || vnode.elm.querySelector('textarea') || vnode.elm.querySelector('[contenteditable="true"]')
+          return (
+            vnode.elm.querySelector("input") ||
+            vnode.elm.querySelector("textarea") ||
+            vnode.elm.querySelector('[contenteditable="true"]')
+          );
         }
       }
-      return null
+      return null;
     },
 
-    attach () {
+    attach() {
       if (this.input) {
-        this.input.addEventListener('input', this.onInput)
-        this.input.addEventListener('keydown', this.onKeyDown)
-        this.input.addEventListener('keyup', this.onKeyUp)
-        this.input.addEventListener('scroll', this.onScroll)
-        this.input.addEventListener('blur', this.onBlur)
+        this.input.addEventListener("input", this.onInput);
+        this.input.addEventListener("keydown", this.onKeyDown);
+        this.input.addEventListener("keyup", this.onKeyUp);
+        this.input.addEventListener("scroll", this.onScroll);
+        this.input.addEventListener("blur", this.onBlur);
       }
     },
 
-    detach () {
+    detach() {
       if (this.input) {
-        this.input.removeEventListener('input', this.onInput)
-        this.input.removeEventListener('keydown', this.onKeyDown)
-        this.input.removeEventListener('keyup', this.onKeyUp)
-        this.input.removeEventListener('scroll', this.onScroll)
-        this.input.removeEventListener('blur', this.onBlur)
+        this.input.removeEventListener("input", this.onInput);
+        this.input.removeEventListener("keydown", this.onKeyDown);
+        this.input.removeEventListener("keyup", this.onKeyUp);
+        this.input.removeEventListener("scroll", this.onScroll);
+        this.input.removeEventListener("blur", this.onBlur);
       }
     },
 
-    onInput () {
-      this.checkKey()
+    onInput() {
+      this.checkKey();
     },
 
-    onBlur () {
-      this.closeMenu()
+    onBlur() {
+      this.closeMenu();
     },
 
-    onKeyDown (e) {
+    onKeyDown(e) {
       if (this.key) {
-        if (e.key === 'ArrowDown' || e.keyCode === 40) {
-          this.selectedIndex++
+        if (e.key === "ArrowDown" || e.keyCode === 40) {
+          this.selectedIndex++;
           if (this.selectedIndex >= this.displayedItems.length) {
-            this.selectedIndex = 0
+            this.selectedIndex = 0;
           }
-          this.cancelEvent(e)
+          this.cancelEvent(e);
         }
-        if (e.key === 'ArrowUp' || e.keyCode === 38) {
-          this.selectedIndex--
+        if (e.key === "ArrowUp" || e.keyCode === 38) {
+          this.selectedIndex--;
           if (this.selectedIndex < 0) {
-            this.selectedIndex = this.displayedItems.length - 1
+            this.selectedIndex = this.displayedItems.length - 1;
           }
-          this.cancelEvent(e)
+          this.cancelEvent(e);
         }
-        if ((e.key === 'Enter' || e.key === 'Tab' || e.keyCode === 13 || e.keyCode === 9) &&
-          this.displayedItems.length > 0) {
-          this.applyMention(this.selectedIndex)
-          this.cancelEvent(e)
+        if (
+          (e.key === "Enter" ||
+            e.key === "Tab" ||
+            e.keyCode === 13 ||
+            e.keyCode === 9) &&
+          this.displayedItems.length > 0
+        ) {
+          this.applyMention(this.selectedIndex);
+          this.cancelEvent(e);
         }
-        if (e.key === 'Escape' || e.keyCode === 27) {
-          this.closeMenu()
-          this.cancelEvent(e)
+        if (e.key === "Escape" || e.keyCode === 27) {
+          this.closeMenu();
+          this.cancelEvent(e);
         }
       }
     },
 
-    onKeyUp (e) {
-      if (this.cancelKeyUp && (e.key === this.cancelKeyUp || e.keyCode === this.cancelKeyCode)) {
-        this.cancelEvent(e)
+    onKeyUp(e) {
+      if (
+        this.cancelKeyUp &&
+        (e.key === this.cancelKeyUp || e.keyCode === this.cancelKeyCode)
+      ) {
+        this.cancelEvent(e);
       }
-      this.cancelKeyUp = null
+      this.cancelKeyUp = null;
       // IE
-      this.cancelKeyCode = null
+      this.cancelKeyCode = null;
     },
 
-    cancelEvent (e) {
-      e.preventDefault()
-      e.stopPropagation()
-      this.cancelKeyUp = e.key
+    cancelEvent(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.cancelKeyUp = e.key;
       // IE
-      this.cancelKeyCode = e.keyCode
+      this.cancelKeyCode = e.keyCode;
     },
 
-    onScroll () {
-      this.updateCaretPosition()
+    onScroll() {
+      this.updateCaretPosition();
     },
 
-    getSelectionStart () {
-      return this.input.isContentEditable ? window.getSelection().anchorOffset : this.input.selectionStart
+    getSelectionStart() {
+      return this.input.isContentEditable
+        ? window.getSelection().anchorOffset
+        : this.input.selectionStart;
     },
 
-    setCaretPosition (index) {
+    setCaretPosition(index) {
       this.$nextTick(() => {
-        this.input.selectionEnd = index
-      })
+        this.input.selectionEnd = index;
+      });
     },
 
-    getValue () {
-      return this.input.isContentEditable ? window.getSelection().anchorNode.textContent : this.input.value
+    getValue() {
+      return this.input.isContentEditable
+        ? window.getSelection().anchorNode.textContent
+        : this.input.value;
     },
 
-    setValue (value) {
-      this.input.value = value
-      this.emitInputEvent('input')
+    setValue(value) {
+      this.input.value = value;
+      this.emitInputEvent("input");
     },
 
-    emitInputEvent (type) {
-      let event
+    emitInputEvent(type) {
+      let event;
       if (isIe) {
-        event = document.createEvent('Event')
-        event.initEvent(type, true, true)
+        event = document.createEvent("Event");
+        event.initEvent(type, true, true);
       } else {
-        event = new Event(type)
+        event = new Event(type);
       }
-      this.input.dispatchEvent(event)
+      this.input.dispatchEvent(event);
     },
 
-    checkKey () {
-      const index = this.getSelectionStart()
+    checkKey() {
+      const index = this.getSelectionStart();
       if (index >= 0) {
-        const { key, keyIndex } = this.getLastKeyBeforeCaret(index)
-        const searchText = this.lastSearchText = this.getLastSearchText(index, keyIndex)
+        const { key, keyIndex } = this.getLastKeyBeforeCaret(index);
+        const searchText = (this.lastSearchText = this.getLastSearchText(
+          index,
+          keyIndex
+        ));
         if (!(keyIndex < 1 || /\s/.test(this.getValue()[keyIndex - 1]))) {
-          return false
+          return false;
         }
-        if (searchText != null) {
-          this.openMenu(key, keyIndex)
-          this.searchText = searchText
-          return true
+
+        const keyIsBeforeCaret = this.getValue()[index - 1] === key;
+        const shouldOpen = this.allowSpace
+          ? this.isMentioning || keyIsBeforeCaret
+          : true;
+        if (searchText != null && shouldOpen) {
+          this.openMenu(key, keyIndex);
+          this.searchText = searchText;
+          return true;
         }
       }
-      this.closeMenu()
-      return false
+      this.closeMenu();
+      return false;
     },
 
-    getLastKeyBeforeCaret (caretIndex) {
-      const [keyData] = this.keys.map(key => ({
-        key,
-        keyIndex: this.getValue().lastIndexOf(key, caretIndex - 1),
-      })).sort((a, b) => b.keyIndex - a.keyIndex)
-      return keyData
+    getLastKeyBeforeCaret(caretIndex) {
+      const [keyData] = this.keys
+        .map((key) => ({
+          key,
+          keyIndex: this.getValue().lastIndexOf(key, caretIndex - 1),
+        }))
+        .sort((a, b) => b.keyIndex - a.keyIndex);
+      return keyData;
     },
 
-    getLastSearchText (caretIndex, keyIndex) {
+    getLastSearchText(caretIndex, keyIndex) {
       if (keyIndex !== -1) {
-        const searchText = this.getValue().substring(keyIndex + 1, caretIndex)
+        const searchText = this.getValue().substring(keyIndex + 1, caretIndex);
         // If there is a space we close the menu
+        if (this.allowSpace) {
+          return searchText.trim();
+        }
+
         if (!/\s/.test(searchText)) {
-          return searchText
+          return searchText;
         }
       }
-      return null
+      return null;
     },
 
-    openMenu (key, keyIndex) {
+    openMenu(key, keyIndex) {
       if (this.key !== key) {
-        this.key = key
-        this.keyIndex = keyIndex
-        this.updateCaretPosition()
-        this.selectedIndex = 0
-        this.$emit('open', key)
+        this.key = key;
+        this.keyIndex = keyIndex;
+        this.updateCaretPosition();
+        this.selectedIndex = 0;
+        this.$emit("open", key);
+        this.isMentioning = true;
       }
     },
 
-    closeMenu () {
+    closeMenu() {
       if (this.key != null) {
-        this.oldKey = this.key
-        this.key = null
-        this.$emit('close', this.oldKey)
+        this.oldKey = this.key;
+        this.key = null;
+        this.$emit("close", this.oldKey);
+        this.isMentioning = false;
       }
     },
 
-    updateCaretPosition () {
+    updateCaretPosition() {
       if (this.key) {
         if (this.input.isContentEditable) {
-          const rect = window.getSelection().getRangeAt(0).getBoundingClientRect()
-          const inputRect = this.input.getBoundingClientRect()
+          const rect = window
+            .getSelection()
+            .getRangeAt(0)
+            .getBoundingClientRect();
+          const inputRect = this.input.getBoundingClientRect();
           this.caretPosition = {
             left: rect.left - inputRect.left,
             top: rect.top - inputRect.top,
             height: rect.height,
-          }
+          };
         } else {
-          this.caretPosition = getCaretPosition(this.input, this.keyIndex)
+          this.caretPosition = getCaretPosition(this.input, this.keyIndex);
         }
-        this.caretPosition.top -= this.input.scrollTop
+        this.caretPosition.top -= this.input.scrollTop;
         if (this.$refs.popper && this.$refs.popper.popperInstance) {
-          this.$refs.popper.popperInstance.scheduleUpdate()
+          this.$refs.popper.popperInstance.scheduleUpdate();
         }
       }
     },
 
-    applyMention (itemIndex) {
-      const item = this.displayedItems[itemIndex]
-      const value = (this.omitKey ? '' : this.key) + String(this.mapInsert ? this.mapInsert(item, this.key) : item.value) + (this.insertSpace ? ' ' : '')
+    applyMention(itemIndex) {
+      const item = this.displayedItems[itemIndex];
+      const value =
+        (this.omitKey ? "" : this.key) +
+        String(this.mapInsert ? this.mapInsert(item, this.key) : item.value) +
+        (this.insertSpace ? " " : "");
       if (this.input.isContentEditable) {
-        const range = window.getSelection().getRangeAt(0)
-        range.setStart(range.startContainer, range.startOffset - this.key.length - (this.lastSearchText ? this.lastSearchText.length : 0))
-        range.deleteContents()
-        range.insertNode(document.createTextNode(value))
-        range.setStart(range.endContainer, range.endOffset)
-        this.emitInputEvent('input')
+        const range = window.getSelection().getRangeAt(0);
+        range.setStart(
+          range.startContainer,
+          range.startOffset -
+            this.key.length -
+            (this.lastSearchText ? this.lastSearchText.length : 0)
+        );
+        range.deleteContents();
+        range.insertNode(document.createTextNode(value));
+        range.setStart(range.endContainer, range.endOffset);
+        this.emitInputEvent("input");
       } else {
-        this.setValue(this.replaceText(this.getValue(), this.searchText, value, this.keyIndex))
-        this.setCaretPosition(this.keyIndex + value.length)
+        this.setValue(
+          this.replaceText(
+            this.getValue(),
+            this.searchText,
+            value,
+            this.keyIndex
+          )
+        );
+        this.setCaretPosition(this.keyIndex + value.length);
       }
-      this.$emit('apply', item, this.key, value)
-      this.closeMenu()
+      this.$emit("apply", item, this.key, value);
+      this.closeMenu();
     },
 
-    replaceText (text, searchText, newText, index) {
-      return text.slice(0, index) + newText + text.slice(index + searchText.length + 1, text.length)
+    replaceText(text, searchText, newText, index) {
+      return (
+        text.slice(0, index) +
+        newText +
+        text.slice(index + searchText.length + 1, text.length)
+      );
     },
   },
-}
+};
 </script>
 
 <template>
-  <div
-    class="mentionable"
-    style="position:relative;"
-  >
+  <div class="mentionable" style="position:relative;">
     <slot />
 
     <VPopover
@@ -360,15 +423,23 @@ export default {
       :auto-hide="false"
       class="popper"
       style="position:absolute;"
-      :style="caretPosition ? {
-        top: `${caretPosition.top}px`,
-        left: `${caretPosition.left}px`,
-      } : {}"
+      :style="
+        caretPosition
+          ? {
+              top: `${caretPosition.top}px`,
+              left: `${caretPosition.left}px`,
+            }
+          : {}
+      "
     >
       <div
-        :style="caretPosition ? {
-          height: `${caretPosition.height}px`,
-        } : {}"
+        :style="
+          caretPosition
+            ? {
+                height: `${caretPosition.height}px`,
+              }
+            : {}
+        "
       />
 
       <template #popover>
@@ -389,16 +460,8 @@ export default {
             @mouseover="selectedIndex = index"
             @mousedown="applyMention(index)"
           >
-            <slot
-              :name="`item-${key || oldKey}`"
-              :item="item"
-              :index="index"
-            >
-              <slot
-                name="item"
-                :item="item"
-                :index="index"
-              >
+            <slot :name="`item-${key || oldKey}`" :item="item" :index="index">
+              <slot name="item" :item="item" :index="index">
                 {{ item.label || item.value }}
               </slot>
             </slot>
