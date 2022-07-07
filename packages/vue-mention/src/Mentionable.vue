@@ -1,76 +1,67 @@
 <script>
 import getCaretPosition from 'textarea-caret'
 import { Dropdown, options } from 'floating-vue'
-
 options.themes.mentionable = {
   $extend: 'dropdown',
   placement: 'top-start',
   arrowPadding: 6,
   arrowOverflow: false,
 }
-
-const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : ''
-const isIe = userAgent.indexOf('MSIE ') !== -1 || userAgent.indexOf('Trident/') !== -1
-
+const userAgent =
+  typeof window !== 'undefined' ? window.navigator.userAgent : ''
+const isIe =
+  userAgent.indexOf('MSIE ') !== -1 || userAgent.indexOf('Trident/') !== -1
 export default {
   components: {
     VDropdown: Dropdown,
   },
-
   inheritAttrs: false,
-
   props: {
     keys: {
       type: Array,
       required: true,
     },
-
     placement: {
       type: String,
       default: 'top-start',
     },
-
     items: {
       type: Array,
       default: () => [],
     },
-
     omitKey: {
       type: Boolean,
       default: false,
     },
-
     filteringDisabled: {
       type: Boolean,
       default: false,
     },
-
+    allowSpace: {
+      type: Boolean,
+      default: false,
+    },
     insertSpace: {
       type: Boolean,
       default: false,
     },
-
     mapInsert: {
       type: Function,
       default: null,
     },
-
     limit: {
       type: Number,
       default: 8,
     },
-
     theme: {
       type: String,
       default: 'mentionable',
     },
-
     caretHeight: {
       type: Number,
       default: 0,
     },
   },
-
   data () {
     return {
       key: null,
@@ -78,18 +69,16 @@ export default {
       searchText: null,
       caretPosition: null,
       selectedIndex: 0,
+      isMentioning: false,
     }
   },
-
   computed: {
     filteredItems () {
       if (!this.searchText || this.filteringDisabled) {
         return this.items
       }
-
       const searchText = this.searchText.toLowerCase()
-
-      return this.items.filter(item => {
+      return this.items.filter((item) => {
         /** @type {string} */
         let text
         if (item.searchText) {
@@ -105,29 +94,24 @@ export default {
         return text.toLowerCase().includes(searchText)
       })
     },
-
     displayedItems () {
       return this.filteredItems.slice(0, this.limit)
     },
   },
-
   watch: {
     displayedItems () {
       this.selectedIndex = 0
     },
-
     searchText (value, oldValue) {
       if (value) {
         this.$emit('search', value, oldValue)
       }
     },
   },
-
   mounted () {
     this.input = this.getInput()
     this.attach()
   },
-
   updated () {
     const input = this.getInput()
     if (input !== this.input) {
@@ -136,24 +120,29 @@ export default {
       this.attach()
     }
   },
-
   beforeDestroy () {
     this.detach()
   },
-
   methods: {
     getInput () {
       const [vnode] = this.$scopedSlots.default()
       if (vnode) {
-        if (vnode.elm.tagName === 'INPUT' || vnode.elm.tagName === 'TEXTAREA' || vnode.elm.isContentEditable) {
+        if (
+          vnode.elm.tagName === 'INPUT' ||
+          vnode.elm.tagName === 'TEXTAREA' ||
+          vnode.elm.isContentEditable
+        ) {
           return vnode.elm
         } else {
-          return vnode.elm.querySelector('input') || vnode.elm.querySelector('textarea') || vnode.elm.querySelector('[contenteditable="true"]')
+          return (
+            vnode.elm.querySelector('input') ||
+            vnode.elm.querySelector('textarea') ||
+            vnode.elm.querySelector('[contenteditable="true"]')
+          )
         }
       }
       return null
     },
-
     attach () {
       if (this.input) {
         this.input.addEventListener('input', this.onInput)
@@ -163,7 +152,6 @@ export default {
         this.input.addEventListener('blur', this.onBlur)
       }
     },
-
     detach () {
       if (this.input) {
         this.input.removeEventListener('input', this.onInput)
@@ -173,15 +161,12 @@ export default {
         this.input.removeEventListener('blur', this.onBlur)
       }
     },
-
     onInput () {
       this.checkKey()
     },
-
     onBlur () {
       this.closeMenu()
     },
-
     onKeyDown (e) {
       if (this.key) {
         if (e.key === 'ArrowDown' || e.keyCode === 40) {
@@ -198,8 +183,13 @@ export default {
           }
           this.cancelEvent(e)
         }
-        if ((e.key === 'Enter' || e.key === 'Tab' || e.keyCode === 13 || e.keyCode === 9) &&
-          this.displayedItems.length > 0) {
+        if (
+          (e.key === 'Enter' ||
+            e.key === 'Tab' ||
+            e.keyCode === 13 ||
+            e.keyCode === 9) &&
+          this.displayedItems.length > 0
+        ) {
           this.applyMention(this.selectedIndex)
           this.cancelEvent(e)
         }
@@ -209,16 +199,17 @@ export default {
         }
       }
     },
-
     onKeyUp (e) {
-      if (this.cancelKeyUp && (e.key === this.cancelKeyUp || e.keyCode === this.cancelKeyCode)) {
+      if (
+        this.cancelKeyUp &&
+        (e.key === this.cancelKeyUp || e.keyCode === this.cancelKeyCode)
+      ) {
         this.cancelEvent(e)
       }
       this.cancelKeyUp = null
       // IE
       this.cancelKeyCode = null
     },
-
     cancelEvent (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -226,30 +217,28 @@ export default {
       // IE
       this.cancelKeyCode = e.keyCode
     },
-
     onScroll () {
       this.updateCaretPosition()
     },
-
     getSelectionStart () {
-      return this.input.isContentEditable ? window.getSelection().anchorOffset : this.input.selectionStart
+      return this.input.isContentEditable
+        ? window.getSelection().anchorOffset
+        : this.input.selectionStart
     },
-
     setCaretPosition (index) {
       this.$nextTick(() => {
         this.input.selectionEnd = index
       })
     },
-
     getValue () {
-      return this.input.isContentEditable ? window.getSelection().anchorNode.textContent : this.input.value
+      return this.input.isContentEditable
+        ? window.getSelection().anchorNode.textContent
+        : this.input.value
     },
-
     setValue (value) {
       this.input.value = value
       this.emitInputEvent('input')
     },
-
     emitInputEvent (type) {
       let event
       if (isIe) {
@@ -260,16 +249,22 @@ export default {
       }
       this.input.dispatchEvent(event)
     },
-
     checkKey () {
       const index = this.getSelectionStart()
       if (index >= 0) {
         const { key, keyIndex } = this.getLastKeyBeforeCaret(index)
-        const searchText = this.lastSearchText = this.getLastSearchText(index, keyIndex)
+        const searchText = (this.lastSearchText = this.getLastSearchText(
+          index,
+          keyIndex,
+        ))
         if (!(keyIndex < 1 || /\s/.test(this.getValue()[keyIndex - 1]))) {
           return false
         }
-        if (searchText != null) {
+        const keyIsBeforeCaret = this.getValue()[index - 1] === key
+        const shouldOpen = this.allowSpace
+          ? this.isMentioning || keyIsBeforeCaret
+          : true
+        if (searchText != null && shouldOpen) {
           this.openMenu(key, keyIndex)
           this.searchText = searchText
           return true
@@ -278,26 +273,29 @@ export default {
       this.closeMenu()
       return false
     },
-
     getLastKeyBeforeCaret (caretIndex) {
-      const [keyData] = this.keys.map(key => ({
-        key,
-        keyIndex: this.getValue().lastIndexOf(key, caretIndex - 1),
-      })).sort((a, b) => b.keyIndex - a.keyIndex)
+      const [keyData] = this.keys
+        .map((key) => ({
+          key,
+          keyIndex: this.getValue().lastIndexOf(key, caretIndex - 1),
+        }))
+        .sort((a, b) => b.keyIndex - a.keyIndex)
       return keyData
     },
-
     getLastSearchText (caretIndex, keyIndex) {
       if (keyIndex !== -1) {
         const searchText = this.getValue().substring(keyIndex + 1, caretIndex)
+        if (this.allowSpace) {
+          return searchText.trim()
+        }
         // If there is a space we close the menu
+
         if (!/\s/.test(searchText)) {
           return searchText
         }
       }
       return null
     },
-
     openMenu (key, keyIndex) {
       if (this.key !== key) {
         this.key = key
@@ -305,21 +303,24 @@ export default {
         this.updateCaretPosition()
         this.selectedIndex = 0
         this.$emit('open', key)
+        this.isMentioning = true
       }
     },
-
     closeMenu () {
       if (this.key != null) {
         this.oldKey = this.key
         this.key = null
         this.$emit('close', this.oldKey)
+        this.isMentioning = false
       }
     },
-
     updateCaretPosition () {
       if (this.key) {
         if (this.input.isContentEditable) {
-          const rect = window.getSelection().getRangeAt(0).getBoundingClientRect()
+          const rect = window
+            .getSelection()
+            .getRangeAt(0)
+            .getBoundingClientRect()
           const inputRect = this.input.getBoundingClientRect()
           this.caretPosition = {
             left: rect.left - inputRect.left,
@@ -337,27 +338,44 @@ export default {
         }
       }
     },
-
     applyMention (itemIndex) {
       const item = this.displayedItems[itemIndex]
-      const value = (this.omitKey ? '' : this.key) + String(this.mapInsert ? this.mapInsert(item, this.key) : item.value) + (this.insertSpace ? ' ' : '')
+      const value =
+        (this.omitKey ? '' : this.key) +
+        String(this.mapInsert ? this.mapInsert(item, this.key) : item.value) +
+        (this.insertSpace ? ' ' : '')
       if (this.input.isContentEditable) {
         const range = window.getSelection().getRangeAt(0)
-        range.setStart(range.startContainer, range.startOffset - this.key.length - (this.lastSearchText ? this.lastSearchText.length : 0))
+        range.setStart(
+          range.startContainer,
+          range.startOffset -
+            this.key.length -
+            (this.lastSearchText ? this.lastSearchText.length : 0),
+        )
         range.deleteContents()
         range.insertNode(document.createTextNode(value))
         range.setStart(range.endContainer, range.endOffset)
         this.emitInputEvent('input')
       } else {
-        this.setValue(this.replaceText(this.getValue(), this.searchText, value, this.keyIndex))
+        this.setValue(
+          this.replaceText(
+            this.getValue(),
+            this.searchText,
+            value,
+            this.keyIndex,
+          ),
+        )
         this.setCaretPosition(this.keyIndex + value.length)
       }
       this.$emit('apply', item, this.key, value)
       this.closeMenu()
     },
-
     replaceText (text, searchText, newText, index) {
-      return text.slice(0, index) + newText + text.slice(index + searchText.length + 1, text.length)
+      return (
+        text.slice(0, index) +
+        newText +
+        text.slice(index + searchText.length + 1, text.length)
+      )
     },
   },
 }
@@ -366,7 +384,7 @@ export default {
 <template>
   <div
     class="mentionable"
-    style="position:relative;"
+    style="position: relative"
   >
     <slot />
 
@@ -379,16 +397,24 @@ export default {
       :auto-hide="false"
       :theme="theme"
       class="popper"
-      style="position:absolute;"
-      :style="caretPosition ? {
-        top: `${caretPosition.top}px`,
-        left: `${caretPosition.left}px`,
-      } : {}"
+      style="position: absolute"
+      :style="
+        caretPosition
+          ? {
+            top: `${caretPosition.top}px`,
+            left: `${caretPosition.left}px`,
+          }
+          : {}
+      "
     >
       <div
-        :style="caretPosition ? {
-          height: `${caretPosition.height}px`,
-        } : {}"
+        :style="
+          caretPosition
+            ? {
+              height: `${caretPosition.height}px`,
+            }
+            : {}
+        "
       />
 
       <template #popper>
